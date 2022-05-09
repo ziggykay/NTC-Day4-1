@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>階段表單</title>
+</head>
+
+<body>
+  <script src="https://unpkg.com/vue@3"></script>
+  <div id="app">
+    <keep-alive>
+      <component :is="currentForm" @set-form="updateForm" @update="updateInfo" :form-data="form"></component>
+    </keep-alive>
+    <!-- <personal></personal>
+    <address-component></address-component>
+    <final></final> -->
+
+  </div>
+
+
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          currentForm: 'personal',
+          form: {}
+        }
+      },
+      methods: {
+        updateForm(formName) {
+          this.currentForm = formName;
+        },
+        updateInfo(inputData) {
+          //this.form['name'] = value; //等於這個寫法this.form.name=
+          console.log(inputData)
+          this.form[inputData.columnName] = inputData.columnValue;
+          console.log(this.form)
+        }
+      }
+
+    });
+
+    app.component('personal', {
+      template: `<h3>本日練習 - 階段表單</h3>
+      <div>
+      姓名<input type="text" v-model="name">
+    </div>
+    <div> 
+      電話<input type="text" v-model="phone">
+    </div>
+    <button @click="nextPage()">下一步</button>`,
+      data() {
+        return {
+          name: '',
+          phone: '',
+        }
+      },
+      methods: {
+        nextPage() {
+          this.$emit('set-form', 'address-component');
+          
+        }
+      },
+      watch: {
+        name: {
+          handler(value) {
+            this.$emit('update', { columnName: 'name', columnValue: value })
+          }
+        },
+        phone: {
+          handler(value) {
+            this.$emit('update', { columnName: 'phone', columnValue: value })
+          }
+        }
+      }
+
+    });
+
+    app.component('address-component', { //address是保留字，因此命名要加-component？
+      template: `<div>
+      地址<input type="text" v-model="address">
+    </div>
+    <button @click="lastPage()">上一步</button>
+    <button @click="nextPage()">下一步</button>`,
+      data() {
+        return {
+          address: ''
+        }
+      },
+      methods: {
+        nextPage() {
+          this.$emit('set-form', 'final');
+        },
+        lastPage() {
+          this.$emit('set-form', 'personal');
+        }
+      },
+      watch: {
+        address: {
+          handler(value) {
+            this.$emit('update', { columnName: 'address', columnValue: value })
+          }
+        }
+      }
+    });
+    app.component('final', {
+      template: `<h3>請確認資料：</h3>
+      <div>{{ formData['name'] }}</div>
+      <div>{{ formData['phone'] }}</div>
+      <div>{{ formData['address'] }}</div>
+      <button @click="lastPage()">上一步</button>`,
+      props: ['formData'],
+      methods: {
+        lastPage() {
+          this.$emit('set-form', 'address-component');
+        }
+      }
+
+    });
+    app.mount('#app')
+  </script>
